@@ -11,38 +11,41 @@ MPU6050 mpu;
 int SCL_PIN=5;
 int SDA_PIN=4;
 
-float p1_Z_LowBound = 0;
-float p1_Z_HighBound = 0;
-float p1_Y_LowBound = 0;
-float p1_Y_HighBound = 0;
+float p1_Z_LowBound = 8;
+float p1_Z_HighBound = 12;
+float p1_Y_LowBound = 37;
+float p1_Y_HighBound = 39.9;
 
-float p2_Z_LowBound = 0;
-float p2_Z_HighBound = 0;
-float p2_Y_LowBound = 0;
-float p2_Y_HighBound = 0;
+float p2_Z_LowBound = 37;
+float p2_Z_HighBound = 39.9;
+float p2_Y_LowBound = 37;
+float p2_Y_HighBound = 39.9;
 
-float p3_Z_LowBound = 0;
-float p3_Z_HighBound = 0;
-float p3_Y_LowBound = 0;
-float p3_Y_HighBound = 0;
+float p3_Z_LowBound = 27;
+float p3_Z_HighBound = 31;
+float p3_Y_LowBound = 37;
+float p3_Y_HighBound = 39.9;
 
 float p4_Z_LowBound = 0;
-float p4_Z_HighBound = 0;
+float p4_Z_HighBound = 2;
 float p4_Y_LowBound = 0;
-float p4_Y_HighBound = 0;
+float p4_Y_HighBound = 2;
 
-float p5_Z_LowBound = 0;
-float p5_Z_HighBound = 0;
-float p5_Y_LowBound = 0;
-float p5_Y_HighBound = 0;
+float p5_Z_LowBound = 37;
+float p5_Z_HighBound = 39.9;
+float p5_Y_LowBound = 8;
+float p5_Y_HighBound = 12;
 
-float p6_Z_LowBound = 0;
-float p6_Z_HighBound = 0;
-float p6_Y_LowBound = 0;
-float p6_Y_HighBound = 0;
+float p6_Z_LowBound = 37;
+float p6_Z_HighBound = 39.9;
+float p6_Y_LowBound = 27;
+float p6_Y_HighBound = 31;
 
 int current_Pos = 0;
-int prev_Pos;
+int samples[] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0}; 
+//bool stop_Send = true;
+
+const char* ssid     = "robotics"; //OSU hidden network name
 
 void setup() 
 {
@@ -51,7 +54,7 @@ void setup()
   delay(10);
   Serial.println('\n');
   
-  WiFi.begin(ssid, password);             // Connect to the network
+  WiFi.begin(ssid);             // Connect to the network
   Serial.print("Connecting to ");
   Serial.print(ssid); Serial.println(" ...");
 
@@ -66,7 +69,6 @@ void setup()
   Serial.print("IP address:\t");
   Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
   delay(1);
-  Serial.begin(115200);
 
   Serial.println("Initialize MPU6050");
 
@@ -124,34 +126,88 @@ void checkSettings()
 
 void loop()
 {
-  PosCalc();
-  if(current_Pos != prev_Pos){
-    /*insert get/post request here*/
+  while(true){
+    Serial.println("loop1");
+    while(FillArray() == 0){
+      Serial.print("[");
+      for(int j=0; j<10; j++){
+        Serial.print(samples[j]);
+        Serial.print(",");
+      }
+      Serial.println("]");
+    }
+    if(current_Pos != samples[0]){
+      current_Pos = samples[0];
+      break;
+//      stop_Send = false;
+    }
+    delay(100);
   }
+ 
   
+  
+  Serial.print("Position: ");
+  Serial.println(current_Pos);
+//  stop_Send = true;
+
   delay(500);
 }
 
-void PosCalc(){
-  prev_Pos = current_Pos;
+int PosCalc(){
+  int sample = 0;
   Vector normAccel = mpu.readNormalizeAccel();
+  //Serial.print(" Ynorm = ");
+  //Serial.print(normAccel.YAxis);
+  //Serial.print(" Znorm = ");
+  //Serial.println(normAccel.ZAxis);
+  
+  if(((p1_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p1_Z_HighBound)) && ((p1_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p1_Y_HighBound))){
+    sample = 1;
+    //Serial.println("Pos1 Case");
+    return sample;
+  }
+  if(((p2_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p2_Z_HighBound)) && ((p2_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p2_Y_HighBound))){
+    sample = 2;
+    //Serial.println("Pos2 Case");
+    return sample;  
+  }
+  if(((p3_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p3_Z_HighBound)) && ((p3_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p3_Y_HighBound))){
+    sample = 3;
+    //Serial.println("Pos3 Case");
+    return sample;  
+  }
+  if(((p4_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p4_Z_HighBound)) && ((p4_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p4_Y_HighBound))){
+    sample = 4;
+    //Serial.println("Pos4 Case");
+    return sample;
+  }
+  if(((p5_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p5_Z_HighBound)) && ((p5_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p5_Y_HighBound))){
+    sample = 5;
+    //Serial.println("Pos5 Case");
+    return sample;
+  }
+  if(((p6_Z_LowBound < normAccel.ZAxis) && (normAccel.ZAxis < p6_Z_HighBound)) && ((p6_Y_LowBound < normAccel.YAxis) && (normAccel.YAxis < p6_Y_HighBound))){
+    sample = 6;
+    //Serial.println("Pos6 Case");
+    return sample;
+  }
 
-  if((p1_Z_LowBound < normAccel.Zaxis < p1_Z_HighBound) && (p1_Y_LowBound < normAccel.Yaxis < p1_Y_HighBound)){
-    current_Pos = 1;
+  return sample;  
+}
+
+int FillArray(){
+  for(int i=0; i<10; i++){
+    samples[i] = PosCalc();
+    delay(100);
   }
-  if((p2_Z_LowBound < normAccel.Zaxis < p2_Z_HighBound) && (p2_Y_LowBound < normAccel.Yaxis < p2_Y_HighBound){
-    current_Pos = 2;  
+  return ArrayCheck();
+}
+
+int ArrayCheck(){
+  for(int i=0; i<9; i++){
+    if(samples[i] != samples[i+1]){
+      return 0;
+    }
   }
-  if((p3_Z_LowBound < normAccel.Zaxis < p3_Z_HighBound) && (p3_Y_LowBound < normAccel.Yaxis < p3_Y_HighBound){
-    current_Pos = 3;
-  }
-  if((p4_Z_LowBound < normAccel.Zaxis < p4_Z_HighBound) && (p4_Y_LowBound < normAccel.Yaxis < p4_Y_HighBound){
-    current_Pos = 4;
-  }
-  if((p5_Z_LowBound < normAccel.Zaxis < p5_Z_HighBound) && (p5_Y_LowBound < normAccel.Yaxis < p5_Y_HighBound){
-    current_Pos = 5;
-  }
-  if((p6_Z_LowBound < normAccel.Zaxis < p6_Z_HighBound) && (p6_Y_LowBound < normAccel.Yaxis < p6_Y_HighBound){
-    current_Pos = 6;
-  }  
+  return 1;
 }
