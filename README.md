@@ -1,1 +1,2 @@
 # WIFI-Time-Tracker
+The WIFI Time Tracker is used to keep track of how long a task is being performed. There are 6 possible tasks that can be kept track of. An MPU-6050 Accelerometer module is used to determine which of the 6 sides of a cube are set on a flat surface. Based off the values received by an ESP-8266 WiFi module, a particular task assigned to those values is sent to a webpage. This webpage increments the time of the task that is being performed. When a new task is received by the webpage, the previous task stops its time and the new task’s time begins.   
