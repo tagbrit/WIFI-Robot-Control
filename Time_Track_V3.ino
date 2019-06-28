@@ -88,6 +88,13 @@ void loop()
     }
     delay(100);
   }
+  /*Send data to the webpage (php file)
+   *The http post data needs to be sent in a particular
+   *format: message={"8 char string":"current position"} 
+   *ESP gets a respnse and if transmission was successful
+   *based off the string length of the response message
+   *from the webpage turns on built in LED
+   */
   digitalWrite(LED_BUILTIN, HIGH); 
   Serial.print("Position: ");
   Serial.println(current_Pos);
@@ -109,11 +116,11 @@ void loop()
   
   http.end(); //close connection
 
-  if(payload.length() > 100){
-    digitalWrite(LED_BUILTIN, HIGH);
+  if(payload.length() > 182){
+    digitalWrite(LED_BUILTIN, HIGH); //turn LED off
   }
   else{
-    digitalWrite(LED_BUILTIN, LOW);  
+    digitalWrite(LED_BUILTIN, LOW);  //turn LED on
   }
   
   
